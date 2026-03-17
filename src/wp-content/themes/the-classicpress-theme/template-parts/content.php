@@ -32,7 +32,7 @@
 		</header>
 
 	<?php else : ?>
-		<header class="blog">
+		<header>
 			<?php
 			the_title(
 				'<h2><a href="' . esc_url( get_permalink() ) . '" rel="bookmark">',
