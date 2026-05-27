@@ -339,10 +339,8 @@ wp_print_scripts();
 
 <div class="wp-full-overlay preview-desktop expanded" aria-labelledby="customizer-title">
 	<div id="customizer-sidebar-container">
-		<h2 id="customizer-title" class="screen-reader-text">
-			<?php printf( esc_html__( 'Customizing: %s' ), esc_html( get_bloginfo( 'name', 'display' ) ) ); ?>
-		</h2>
-		<form id="customize-controls" class="wrap wp-full-overlay-sidebar"
+		<form id="customize-controls"
+			class="wrap wp-full-overlay-sidebar"
 			action="<?php echo esc_url( admin_url( 'customize.php' ) ); ?>"
 			method="post"
 			accept-charset="<?php bloginfo( 'charset' ); ?>"
@@ -2277,7 +2275,7 @@ customize_themes_print_templates();
 
 <!-- Template for moving widget to different sidebar -->
 <template id="tmpl-change-sidebar">
-	<div id="move-widget-area" class="move-widget-area active" style="margin-top:-10px;margin-bottom:10px;">
+	<div id="move-widget-area" class="move-widget-area active">
 		<p class="description">
 			<?php esc_html_e( 'Select an area to move this widget into:' ); ?>
 		</p>
