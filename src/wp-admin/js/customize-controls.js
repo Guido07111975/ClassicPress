@@ -1752,6 +1752,23 @@ document.addEventListener( 'DOMContentLoaded', function() {
 			description.previousElementSibling.classList.remove( 'open' );
 			description.previousElementSibling.querySelector( '.customize-help-toggle' ).setAttribute( 'aria-expanded', false );
 
+		// Show and hide live preview on narrow screens
+		} else if ( e.target.parentNode.parentNode.id === 'customize-header-actions' ) {
+			if ( e.target.className === 'preview' ) {
+				e.target.style.display = 'none';
+				e.target.previousElementSibling.style.display = 'block';
+				if ( window.location.hash === '#sub-accordion-section-themes' ) {
+					document.querySelector( '.customize-themes-full-container' ).style.display = 'block';
+				} else {
+					previewFrame.style.zIndex = '10';
+				}
+			} else if ( e.target.className === 'controls' ) {
+				e.target.style.display = 'none';
+				e.target.nextElementSibling.style.display = 'block';
+				document.querySelector( '.customize-themes-full-container' ).style.display = 'none';
+				previewFrame.style.zIndex = '1';
+			}
+
 		// Browse installed themes
 		} else if ( e.target.classList && e.target.classList.contains( 'themes-section-installed_themes' ) ) {
 			form.querySelector( '.themes-section-wporg_themes' ).classList.remove( 'selected' );
@@ -1760,8 +1777,15 @@ document.addEventListener( 'DOMContentLoaded', function() {
 				document.querySelector( '.themes').innerHTML = installedThemesHTML;
 				document.querySelector( '.theme-browser' ).classList.remove( 'wp-org' );
 				document.querySelector( '.theme-browser' ).classList.add( 'local' );
+				document.querySelector( '.themes-section-installed_themes' ).setAttribute( 'aria-expanded', 'true' );
+				document.querySelector( '.themes-section-wporg_themes' ).setAttribute( 'aria-expanded', 'false' );
 				document.querySelector( '.feature-filter-toggle' ).style.display = 'none';
 				document.querySelector( '.filter-themes-count .theme-count' ).textContent = document.querySelectorAll( '.local .themes li' ).length;
+				if ( window.innerWidth <= 600 ) {
+					document.querySelector( '#customize-header-actions .preview' ).style.display = 'none';
+					document.querySelector( '#customize-header-actions .controls' ).style.display = 'block';
+					document.querySelector( '.customize-themes-full-container' ).style.display = 'block';
+				}
 			}
 			if ( orgThemes ) {
 				intersectionObserver.unobserve( orgThemes[orgThemes.length - 1] ); // deactivate Intersection Observer
@@ -1774,7 +1798,14 @@ document.addEventListener( 'DOMContentLoaded', function() {
 			e.target.classList.add( 'selected' );
 			document.querySelector( '.theme-browser' ).classList.remove( 'local' );
 			document.querySelector( '.theme-browser' ).classList.add( 'wp-org' );
+			document.querySelector( '.themes-section-installed_themes' ).setAttribute( 'aria-expanded', 'false' );
+			document.querySelector( '.themes-section-wporg_themes' ).setAttribute( 'aria-expanded', 'true' );
 			document.querySelector( '.feature-filter-toggle' ).style.display = 'inline-block';
+			if ( window.innerWidth <= 600 ) {
+				document.querySelector( '#customize-header-actions .preview' ).style.display = 'none';
+				document.querySelector( '#customize-header-actions .controls' ).style.display = 'block';
+				document.querySelector( '.customize-themes-full-container' ).style.display = 'block';
+			}
 			updateThemes( 'browse', 'new' );
 
 		// Select theme tags
