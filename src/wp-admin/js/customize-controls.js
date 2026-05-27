@@ -400,6 +400,8 @@ document.addEventListener( 'DOMContentLoaded', function() {
 				theme.style.marginBottom = '2%';
 			} );
 
+			showAndHide( document.querySelectorAll( '.themes li:not( .add-new-theme )' ) );
+
 			// Update count
 			document.querySelector( '.filter-themes-count .theme-count' ).textContent = orgThemes.length;
 			if ( orgThemes.length ) {
@@ -1652,6 +1654,39 @@ document.addEventListener( 'DOMContentLoaded', function() {
 		}
 	} );
 
+	// Show and hide each theme's details button when hovering over and out of a theme
+	function showAndHide( themes ) {
+		themes.forEach( function( theme ) {
+			theme.addEventListener( 'mouseover', function() {
+				themes.forEach( function( other ) {
+					other.querySelector( '.more-details' ).style.opacity = '0';
+				} );
+				theme.querySelector( '.more-details' ).style.opacity = '1';
+			} );
+			theme.addEventListener( 'focusin', function() {
+				themes.forEach( function( other ) {
+					other.querySelector( '.more-details' ).style.opacity = '0';
+				} );
+				theme.querySelector( '.more-details' ).style.opacity = '1';
+			} );
+			theme.addEventListener( 'touchenter', function() {
+				themes.forEach( function( other ) {
+					other.querySelector( '.more-details' ).style.opacity = '0';
+				} );
+				theme.querySelector( '.more-details' ).style.opacity = '1';
+			} );
+			theme.addEventListener( 'mouseout', function() {
+				if ( ! theme.matches( ':has(:focus)' ) ) {
+					theme.querySelector( '.more-details' ).style.opacity = '0';
+				}
+			} );
+			theme.addEventListener( 'touchleave', function() {
+				theme.querySelector( '.more-details' ).style.opacity = '0';
+			} );
+		} );
+	}
+	showAndHide( document.querySelectorAll( '.themes li:not( .add-new-theme )' ) );
+
 	/**
 	 * Handle clicks on buttons.
 	 *
@@ -1731,6 +1766,7 @@ document.addEventListener( 'DOMContentLoaded', function() {
 			if ( orgThemes ) {
 				intersectionObserver.unobserve( orgThemes[orgThemes.length - 1] ); // deactivate Intersection Observer
 			}
+			showAndHide( document.querySelectorAll( '.themes li:not( .add-new-theme )' ) );
 
 		// Browse themes at wp.org
 		} else if ( e.target.classList && e.target.classList.contains( 'themes-section-wporg_themes' ) ) {
