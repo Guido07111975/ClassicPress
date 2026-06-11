@@ -922,23 +922,26 @@ document.addEventListener( 'DOMContentLoaded', function() {
 	}
 
 	/**
-	 * Crop an image for use as a logo or site icon image.
+	 * Crop an image.
 	 *
 	 * @abstract
 	 * @return {void}
 	 */
 	function cropImage( selectedItem, attachmentId, imageUrl, nonce, cropContext ) {
 		var aspectRatio = 1,
-			logoWidth   = 512,
-			logoHeight  = 512;
+			width = 512,
+			height = 512;
 
 		closeModal();
 
 		if ( cropContext === 'custom_logo' && _cpCustomLogo && _cpCustomLogo.width && _cpCustomLogo.height ) {
-			logoWidth   = _cpCustomLogo.width;
-			logoHeight  = _cpCustomLogo.height;
-			aspectRatio = logoWidth / logoHeight;
+			width = _cpCustomLogo.width;
+			height = _cpCustomLogo.height;
+		} else if ( cropContext === 'header_image_data' ) {
+			width = _wpCustomizeHeader.data.width;
+			height = _wpCustomizeHeader.data.height;
 		}
+		aspectRatio = width / height;
 
 		cpCropper.open( {
 			attachmentId : attachmentId,
@@ -946,12 +949,14 @@ document.addEventListener( 'DOMContentLoaded', function() {
 			context      : cropContext,
 			nonce        : nonce,
 			aspectRatio  : aspectRatio,
-			minWidth     : logoWidth,
-			minHeight    : logoHeight,
+			minWidth     : width,
+			minHeight    : height,
+			width        : width,
+			height       : height,
 			onSelect     : function( attachment ) {
 				const imageElement = new Image();
 				imageElement.src = attachment.url;
-				addItemToCustomizer( selectedItem, attachment.id, imageElement, attachment.url );
+				addItemToCustomizer( selectedItem, attachment.id, imageElement, attachment.url, attachment );
 			}
 		} );
 	}
@@ -1100,8 +1105,8 @@ document.addEventListener( 'DOMContentLoaded', function() {
 	 * @abstract
 	 * @return {void}
 	 */
-	function addItemToCustomizer( selectedItem, attachmentId, imageElement, imageUrl ) {
-		var headerData,
+	function addItemToCustomizer( selectedItem, attachmentId, imageElement, imageUrl, attachment ) {
+		var headerData, headerUrl,
 			parent = ( selectedItem.className === 'choice' ) ? selectedItem.closest( '.choices' ) : customizeButton.parentNode,
 			grandparent = parent.parentNode,
 			li = parent.closest( 'li' ),
@@ -1154,13 +1159,16 @@ document.addEventListener( 'DOMContentLoaded', function() {
 				customizeButton.classList.remove( 'upload-button' );
 				parent.previousElementSibling.querySelector( 'input' ).value = attachmentId;
 
-				_updatedControlsWatcher.header_image = selectedItem.dataset.url;
+				headerUrl = attachment ? attachment.url : selectedItem.dataset.url;
+				window.sendSettingToPreview( 'header_image', headerUrl );
+
+				_updatedControlsWatcher.header_image = headerUrl;
 				_updatedControlsWatcher[ settingId ] = {
 					attachment_id: parseInt( attachmentId ),
-					url: selectedItem.dataset.url,
-					thumbnail_url: selectedItem.dataset.sizes?.thumbnail?.url || imageUrl,
-					width: selectedItem.dataset.width,
-					height: selectedItem.dataset.height
+					url:           attachment ? attachment.url : imageUrl,
+					thumbnail_url: attachment ? ( attachment.sizes?.thumbnail?.url || attachment.url ) : ( selectedItem.dataset.sizes?.thumbnail?.url || imageUrl ),
+					width:         attachment ? attachment.width  : selectedItem.dataset.width,
+					height:        attachment ? attachment.height : selectedItem.dataset.height
 				};
 			}
 
