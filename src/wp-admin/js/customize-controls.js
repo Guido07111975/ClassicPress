@@ -1834,6 +1834,34 @@ document.addEventListener( 'DOMContentLoaded', function() {
 		} else if ( e.target.classList && e.target.className === 'reorder-done' ) {
 			ul.classList.remove( 'reordering' );
 
+		// Delete previous header image
+		} else if ( e.target.className === 'dashicons dashicons-no close' ) {
+			fetch( ajaxurl, {
+				method: 'POST',
+				credentials: 'same-origin',
+				body: new URLSearchParams( {
+					action: 'custom-header-remove',
+					nonce: _wpCustomizeHeader.nonces.remove,
+					attachment_id: e.target.dataset.id
+				} )
+			} )
+			.then( function( response ) {
+				if ( response.ok ) {
+					return response.json(); // no errors
+				}
+				throw new Error( response.status );
+			} )
+			.then( function() {
+				let choices = e.target.closest( '.choices' );
+				e.target.parentNode.remove();
+				if ( ! choices.querySelector( '.header-image-item' ) ) {
+					choices.querySelector( '.customize-control-title' ).remove();
+				}
+			} )
+			.catch( function( error ) {
+				console.error( error );
+			} );
+
 		// Open and close description
 		} else if ( e.target.classList && e.target.classList.contains( 'customize-help-toggle' ) ) {
 			if ( e.target.closest( 'ul' ) ) {
