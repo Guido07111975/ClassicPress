@@ -2070,6 +2070,18 @@ document.addEventListener( 'DOMContentLoaded', function() {
 				e.target.setAttribute( 'aria-expanded', false );
 			}
 
+		// Close add widgets sub-panel
+		} else if ( document.body.classList.contains( 'adding-widget' ) && e.target.classList && e.target.classList.contains( 'customize-section-back' ) ) {
+			document.body.classList.remove( 'adding-widget' );
+			document.getElementById( 'widgets-left' ).style.display = 'none';
+			for ( let i = 0, n = addWidgetButtons.length; i < n; i++ ) {
+				if ( addWidgetButtons[i].getAttribute( 'aria-expanded' ) === 'true' ) {
+					addWidgetButtons[i].setAttribute( 'aria-expanded', 'false' );
+					addWidgetButtons[i].focus();
+					return;
+				}
+			}
+
 		// Reorder widgets
 		} else if ( e.target.classList && e.target.className === 'reorder' ) {
 			ul.classList.add( 'reordering' );
