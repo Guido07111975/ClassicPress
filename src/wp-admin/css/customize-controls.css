@@ -172,7 +172,6 @@ body:not(.ready) #customize-save-button-wrapper .save {
 }
 
 .outer-section-open .wp-full-overlay.expanded .wp-full-overlay-main {
-	left: 300px;
 	opacity: 0.4;
 }
 
@@ -354,6 +353,7 @@ body.trashing #publish-settings {
 	bottom: 14px;
 	font-size: 14px;
 	text-decoration: none;
+	color: #a7aaad;
 }
 
 #customize-control-changeset_preview_link a.disabled,
@@ -1717,7 +1717,6 @@ input[type="range"].hue-slider::-moz-range-track {
 	border-bottom: none;
 }
 
-
 #customize-control-custom_css textarea {
 	display: block;
 	height: 500px;
@@ -2599,6 +2598,11 @@ body.adding-widget .add-new-widget:before,
 .adding-menu-items .add-new-menu-item:before,
 #accordion-section-add_menu .add-new-menu-item.open:before {
 	transform: rotate(45deg);
+}
+
+#sub-accordion-section-publish_settings {
+	width: 300px;
+	padding: 14px 10px 15px;
 }
 
 #widgets-right {
