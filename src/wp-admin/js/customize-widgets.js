@@ -346,7 +346,8 @@ document.addEventListener( 'DOMContentLoaded', function() {
 			const clone = widget.cloneNode( true ),
 				widgetId = widget.dataset.widgetId,
 				ul = form.querySelector( '.control-section-sidebar[style*="display: block"]' ), // visible sidebar ul
-				buttons = ul.querySelector( '.customize-control-sidebar_widgets.no-drag' );
+				buttons = ul.querySelector( '.customize-control-sidebar_widgets.no-drag' ),
+				addItemsPanel = document.getElementById( 'widgets-left' );
 
 			if ( ! widgetId || ! ul || ! buttons ) {
 				return;
@@ -417,6 +418,17 @@ document.addEventListener( 'DOMContentLoaded', function() {
 					widget: clone.querySelector( '.widget' )
 				}
 			} ) );
+
+			// Remove overlay and close "Add widgets" panel
+			document.body.classList.remove( 'adding-widget' );
+			if ( addItemsPanel ) {
+				addItemsPanel.style.display = 'none';
+			}
+
+			// Reset toggle buttons
+			document.querySelectorAll( '.add-new-widget' ).forEach( function( btn ) {
+				btn.setAttribute( 'aria-expanded', 'false' );
+			} );
 
 			// Enable Save/Publish button
 			activatePublishButton();
