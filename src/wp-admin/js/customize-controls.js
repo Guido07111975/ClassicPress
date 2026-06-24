@@ -256,17 +256,97 @@ document.addEventListener( 'DOMContentLoaded', function() {
 	 * @param event - Event.
 	 * @return {void}
 	 */
-	function constrainTab( event ) {
-		var first = form.querySelector( '#customize-save-button-wrapper' ).disabled === false ? form.querySelector( '#customize-save-button-wrapper' ) : form.querySelector( '.customize-controls-close' ),
-			last = form.querySelector( '.preview-mobile' );
+	function constrainTab( e ) {
+		var first = saveButton.disabled === false ? saveButton : form.querySelector( '.customize-controls-close' ),
+			last = form.querySelector( '.preview-mobile' ),
+			lastButton = [...publishSettingsPanel.querySelectorAll( 'button' )].pop(),
+			widgetSearch = document.getElementById( 'widgets-search' ),
+			lastWidget = [...document.querySelectorAll( '#available-widgets-list .widget-title' )].pop(),
+			menuSearch = document.getElementById( 'menu-items-search' ),
+			lastMenuItem = [...availableMenuItems.querySelectorAll( '.accordion-section-title' )].pop();
 
-		event.stopPropagation();
-		if ( event.target === last && ! event.shiftKey ) {
-			event.preventDefault();
-			first.focus();
-		} else if ( event.target === first && event.shiftKey ) {
-			event.preventDefault();
-			last.focus();
+		e.stopPropagation();
+		if ( e.shiftKey ) {
+			if ( e.target === first ) {
+				e.preventDefault();
+				last.focus();
+			} else if ( e.target.parentNode.parentNode.id === 'customize-control-changeset_status' ) {
+				e.preventDefault();
+				publishSettings.focus();
+			} else if ( e.target === publishSettings ) {
+				if ( document.body.classList.contains( 'outer-section-open' ) ) {
+					e.preventDefault();
+					lastButton.disabled === 'false' ? lastButton.focus() : document.querySelector( '#customize-control-trash_changeset .button-link-delete' ).focus();
+				}
+			} else if ( e.target === widgetSearch ) {
+				e.preventDefault();
+				for ( let i = 0, n = addWidgetButtons.length; i < n; i ++ ) {
+					if ( isVisible( addWidgetButtons[i] ) ) {
+						addWidgetButtons[i].focus();
+						return;
+					}
+				}
+			} else if ( e.target.classList?.contains( 'add-new-widget' ) ) {
+				if ( document.body.classList.contains( 'adding-widget' ) ) {
+					e.preventDefault();
+					lastWidget.focus();
+				}
+			} else if ( e.target === menuSearch ) {
+				e.preventDefault();
+				for ( let i = 0, n = addMenuButtons.length; i < n; i++ ) {
+					if ( isVisible( addMenuButtons[i] ) ) {
+						addMenuButtons[i].focus();
+						return;
+					}
+				}
+			} else if ( e.target.classList?.contains( 'add-new-menu-item' ) ) {
+				if ( document.body.classList.contains( 'adding-menu-items' ) ) {
+					e.preventDefault();
+					lastMenuItem.focus();
+				}
+			}
+		} else {
+			if ( e.target === last ) {
+				e.preventDefault();
+				first.focus();
+			} else if ( isVisible( publishSettingsPanel ) ) {
+				if ( e.target === publishSettings ) {
+					e.preventDefault();
+					document.getElementById( 'changeset-status-publish' ).focus();
+				} else if ( e.target === lastButton ) {
+					e.preventDefault();
+					publishSettings.focus();
+				} else if ( e.target.classList?.contains( 'button-link-delete' ) && lastButton.hasAttribute( 'disabled' ) ) {
+					e.preventDefault();
+					publishSettings.focus();
+				}
+			} else if ( isVisible( widgetSearch ) ) {
+				if ( e.target.classList?.contains( 'add-new-widget' ) ) {
+					e.preventDefault();
+					widgetSearch.focus();
+				} else if ( e.target === lastWidget ) {
+					e.preventDefault();
+					for ( let i = 0, n = addWidgetButtons.length; i < n; i ++ ) {
+						if ( isVisible( addWidgetButtons[i] ) ) {
+							addWidgetButtons[i].focus();
+							return;
+						}
+					}
+				}
+			} else if ( isVisible( menuSearch ) ) {
+				if ( e.target.classList?.contains( 'add-new-menu-item' ) ) {
+					e.preventDefault();
+					menuSearch.focus();
+				} else if ( e.target === lastMenuItem ) {
+					e.preventDefault();
+					for ( let i = 0, n = addMenuButtons.length; i < n; i++ ) {
+						if ( isVisible( addMenuButtons[i] ) ) {
+							addMenuButtons[i].focus();
+							return;
+						}
+					}
+				}
+			}
 		}
 	}
 
@@ -2069,6 +2149,9 @@ document.addEventListener( 'DOMContentLoaded', function() {
 				}
 				availableWidgets.style.display = 'block';
 				e.target.setAttribute( 'aria-expanded', true );
+				setTimeout( function() {
+					document.getElementById( 'widgets-search' ).focus();
+				}, 0 );
 			} else {
 				availableWidgets.style.display = 'none';
 				e.target.setAttribute( 'aria-expanded', false );
