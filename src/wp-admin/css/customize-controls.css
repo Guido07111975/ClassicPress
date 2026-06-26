@@ -2735,7 +2735,9 @@ body.adding-widget .add-new-widget:before,
 
 	#customize-footer-actions,
 	/*#customize-preview,*/
-	.customize-controls-preview-toggle .controls {
+	.customize-controls-preview-toggle .controls,
+	.preview-only .wp-full-overlay-sidebar-content,
+	.preview-only .customize-controls-preview-toggle .preview {
 		display: none;
 	}
 
