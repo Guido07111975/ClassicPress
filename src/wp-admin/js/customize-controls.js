@@ -9,47 +9,56 @@
 _updatedControlsWatcher, Coloris, ajaxurl, IMAGE_WIDGET, _cpCustomLogo,
 FilePondPluginFileValidateSize, FilePondPluginFileValidateType,
 FilePondPluginFileRename, FilePondPluginImagePreview, cpCropper, console,
-_wpUpdatesSettings, _wpThemeSettings */
+_wpUpdatesSettings, _wpThemeSettings, _cpFilepondLabels */
 
 document.addEventListener( 'DOMContentLoaded', function() {
 	window.newMenuItemIDs = window.newMenuItemIDs || [];
-	var addButton, pond, leftSidebar, customizeButton, orgThemes, newUrl,
+
+	const dialog = document.getElementById( 'widget-modal' ),
+		customizerControls = [...document.getElementById( 'customize-theme-controls' ).children],
+		form = document.querySelector( 'form' ),
+		saveButton = document.getElementById( 'save' ),
+		publishSettings = document.getElementById( 'publish-settings' ),
+		publishSettingsPanel = document.getElementById( 'sub-accordion-section-publish_settings' ),
+		menuToEdit = document.getElementById( 'menu-to-edit' ),
+		availableMenuItems = document.getElementById( 'available-menu-items' ),
+		previewFrame = document.getElementById( 'customize-preview' ),
+		availableWidgets = document.getElementById( 'widgets-left' ),
+		devicesWrapper = document.querySelector( '.devices' ),
+		buttons = devicesWrapper?.querySelectorAll( 'button[data-device]' ),
+		section = document.getElementById( 'sub-accordion-section-custom_css' ),
+		colorSchemeInputs = form.querySelectorAll( 'input[name="_customize-radio-colorscheme"]' ),
+		hueControl = form.querySelector( 'li[data-setting-id="colorscheme_hue"]' );
+
+	let addButton, pond, leftSidebar, customizeButton, orgThemes, newUrl,
 		intersectionObserver,
 		i = 1,
-		customizerControls = [...document.getElementById( 'customize-theme-controls' ).children],
 		{ FilePond } = window, // import FilePond
 		cropContext = false,
-		dialog = document.getElementById( 'widget-modal' ),
+		newFrontPageIds = [],
+		newPostsPageIds = [],
 		installedThemesHTML = document.querySelector( '.themes')?.innerHTML,
 		reducedMotionMediaQuery = window.matchMedia( '(prefers-reduced-motion: reduce)' ),
 		isReducedMotion = reducedMotionMediaQuery.matches,
-		form = document.querySelector( 'form' ),
 		inputs = form.querySelectorAll( 'input, select, textarea' ),
-		saveButton = form.querySelector( '#save' ),
-		publishSettings = form.querySelector( '#publish-settings' ),
-		publishSettingsPanel = document.getElementById( 'sub-accordion-section-publish_settings' ),
-		devicesWrapper = document.querySelector( '.devices' ),
-		buttons = devicesWrapper?.querySelectorAll( 'button[data-device]' ),
-		previewFrame = document.getElementById( 'customize-preview' ),
+		lockableControls = form.querySelectorAll( 'input, select, textarea, button' ),
+		hyperlinks = document.querySelectorAll( 'a' ),
+		lockSettings = window._wpCustomizeSettings || {},
+		lockNotice = document.getElementById( 'customize-lock-notice' ),
+		lockRefreshTimer = null,
 		queryParams = new URLSearchParams( window.location.search ),
 		addMenuButtons = document.querySelectorAll( '.add-new-menu-item' ),
-		availableMenuItems = document.getElementById( 'available-menu-items' ),
 		addWidgetButtons = document.querySelectorAll( '.add-new-widget' ),
 		newMenuItemIDs = window.newMenuItemIDs,
-		availableWidgets = document.getElementById( 'widgets-left' ),
-		menuToEdit = document.getElementById( 'menu-to-edit' ),
 		hash = window.location.hash.replace( '#', '' ),
 		targetEl = document.getElementById( hash ),
-		section = document.getElementById( 'sub-accordion-section-custom_css' ),
 		discardingChangeset = false,
 		changesetStatus = window._wpCustomizeChangesetStatus || 'publish';
-
-	const colorSchemeInputs = form.querySelectorAll( 'input[name="_customize-radio-colorscheme"]' ),
-		hueControl = form.querySelector( 'li[data-setting-id="colorscheme_hue"]' );
 
 	// Go direct to appropriate Customizer panel if its hash is specified in the URL
 	if ( hash === 'menu-to-edit' ) {
 		hash = 'sub-accordion-panel-nav_menus';
+		window.location.hash = encodeURIComponent( hash );
 	}
 
 	if ( ! hash ) {
@@ -78,6 +87,12 @@ document.addEventListener( 'DOMContentLoaded', function() {
 		if ( hash === 'sub-accordion-section-themes' ) {
 			document.getElementById( 'customize-save-button-wrapper' ).style.display = 'none';
 			document.getElementById( 'customize-footer-actions' ).style.display = 'none';
+
+			if ( window.innerWidth <= 640 ) {
+				form.querySelector( '.themes-section-installed_themes' ).classList.remove( 'selected' );
+				document.querySelector( '.theme-browser' ).classList.remove( 'local' );
+				document.querySelector( '.themes-section-installed_themes' ).setAttribute( 'aria-expanded', 'false' );
+			}
 		} else {
 			document.getElementById( 'customize-save-button-wrapper' ).style.display = 'block';
 			document.getElementById( 'customize-footer-actions' ).style.display = 'block';
@@ -92,6 +107,14 @@ document.addEventListener( 'DOMContentLoaded', function() {
 			targetEl = document.getElementById( newHash );
 
 		if ( newHash && targetEl ) {
+			if ( newHash === 'customize-pane-parent' ) {
+				document.title = _wpCustomizeControlsL10n.customizing + ' ' + document.querySelector( '.site-title' ).textContent;
+			} else if ( newHash === 'sub-accordion-panel-widgets' ) {
+				document.title = targetEl.querySelector( '.panel-title' ).textContent.trim();
+			} else {
+				document.title = targetEl.querySelector( 'h3' ).textContent.replace( '▸', '' ).trim();
+			}
+
 			customizerControls.forEach( function( child ) {
 				child.style.display = 'none';
 			} );
@@ -130,6 +153,12 @@ document.addEventListener( 'DOMContentLoaded', function() {
 			if ( newHash === 'sub-accordion-section-themes' ) {
 				document.getElementById( 'customize-save-button-wrapper' ).style.display = 'none';
 				document.getElementById( 'customize-footer-actions' ).style.display = 'none';
+
+				if ( window.innerWidth <= 640 ) {
+					form.querySelector( '.themes-section-installed_themes' ).classList.remove( 'selected' );
+					document.querySelector( '.theme-browser' ).classList.remove( 'local' );
+					document.querySelector( '.themes-section-installed_themes' ).setAttribute( 'aria-expanded', 'false' );
+				}
 			} else {
 				document.getElementById( 'customize-save-button-wrapper' ).style.display = 'block';
 				document.getElementById( 'customize-footer-actions' ).style.display = 'block';
@@ -141,7 +170,7 @@ document.addEventListener( 'DOMContentLoaded', function() {
 	if ( queryParams.get( 'url' ) ) {
 		queryParams.delete( 'url' );
 		newUrl = window.location.pathname + ( queryParams.toString() ? '?' + queryParams.toString() : '' ) + ( hash ? '#' + hash : '' );
-		history.replaceState( null, '', newUrl );
+		history.replaceState( null, '', encodeURI( newUrl ) );
 	}
 
 	if ( queryParams.get( 'discarded' ) ) {
@@ -150,11 +179,11 @@ document.addEventListener( 'DOMContentLoaded', function() {
 
 	if ( queryParams.get( 'theme' ) ) {
 		if ( queryParams.get( 'theme' ) === _wpCustomizeControlsL10n.activeTheme ) { // active theme
-			history.replaceState( null, '', window.location.pathname );
+			history.replaceState( null, '', encodeURI( window.location.pathname ) );
 		} else {
 			queryParams.delete( 'return' );
 			newUrl = window.location.pathname + ( queryParams.toString() ? '?' + queryParams.toString() : '' ) + ( hash ? '#' + hash : '' );
-			history.replaceState( null, '', newUrl );
+			history.replaceState( null, '', encodeURI( newUrl ) );
 			saveButton.disabled = false;
 			saveButton.textContent = _wpCustomizeControlsL10n.activate;
 		}
@@ -164,7 +193,7 @@ document.addEventListener( 'DOMContentLoaded', function() {
 	} else {
 		queryParams.delete( 'return' );
 		newUrl = window.location.pathname + ( queryParams.toString() ? '?' + queryParams.toString() : '' ) + ( hash ? '#' + hash : '' );
-		history.replaceState( null, '', newUrl );
+		history.replaceState( null, '', encodeURI( newUrl ) );
 	}
 
 	document.getElementById( 'customize-preview-loading' ).classList.add( 'hidden' );
@@ -175,6 +204,223 @@ document.addEventListener( 'DOMContentLoaded', function() {
 	} else {
 		setScheduledDateToNow();
 	}
+
+	function preventDefaultListener( e ) {
+		e.preventDefault();
+	}
+
+	/**
+	 * Disable editing UI while another user holds the lock.
+	 *
+	 * @return {void}
+	 */
+	function disableCustomizerEditing() {
+		lockableControls.forEach( function( input ) {
+			if ( input === saveButton || input === publishSettings || input.type === 'hidden' || input.closest( '#customize-lock-notice' ) ) {
+				return;
+			}
+
+			if ( ! input.disabled ) {
+				input.disabled = true;
+				input.setAttribute( 'data-lock-disabled', 'true' );
+			}
+		} );
+
+		hyperlinks.forEach( function( link ) {
+			if ( link.classList.contains( 'button' ) && link.parentNode.className !== 'aside-lock' ) {
+				link.addEventListener( 'click', preventDefaultListener );
+			}
+		} );
+
+		saveButton.disabled = true;
+		saveButton.setAttribute( 'aria-disabled', 'true' );
+		saveButton.setAttribute( 'data-lock-disabled', 'true' );
+
+		if ( publishSettings ) {
+			publishSettings.disabled = true;
+			publishSettings.setAttribute( 'aria-disabled', 'true' );
+			publishSettings.setAttribute( 'data-lock-disabled', 'true' );
+		}
+
+		document.body.classList.add( 'customizer-locked' );
+	}
+
+	/**
+	 * Re-enable editing UI after lock takeover.
+	 *
+	 * @return {void}
+	 */
+	function enableCustomizerEditing() {
+		lockableControls.forEach( function( input ) {
+			if ( input !== saveButton && input.hasAttribute( 'data-lock-disabled' ) ) {
+				input.disabled = false;
+				input.removeAttribute( 'data-lock-disabled' );
+			}
+		} );
+
+		hyperlinks.forEach( function( link ) {
+			link.removeEventListener( 'click', preventDefaultListener );
+		} );
+
+		if ( publishSettings ) {
+			publishSettings.disabled = false;
+			publishSettings.removeAttribute( 'aria-disabled' );
+			publishSettings.removeAttribute( 'data-lock-disabled' );
+		}
+
+		document.body.classList.remove( 'customizer-locked' );
+	}
+
+	/**
+	 * Apply lock state to UI.
+	 *
+	 * @return {void}
+	 */
+	function applyLockState() {
+		const lockUser = lockSettings?.lock?.lockUser;
+		let nameNode;
+		let avatarNode;
+		let takeOverButton;
+
+		if ( ! lockNotice ) {
+			return;
+		}
+
+		nameNode = lockNotice.querySelector( '.customize-lock-notice-name' );
+		avatarNode = lockNotice.querySelector( '.customize-lock-notice-avatar' );
+		takeOverButton = lockNotice.querySelector( '.button-primary' );
+
+		if ( lockUser && lockUser.id && lockUser.id !== lockSettings?.user?.id ) {
+			if ( nameNode ) {
+				nameNode.textContent = lockUser.name || '';
+			}
+
+			if ( avatarNode ) {
+				if ( typeof lockUser.avatar === 'string' && /<img/i.test( lockUser.avatar ) ) {
+					avatarNode.innerHTML = lockUser.avatar;
+					avatarNode.hidden = false;
+				} else {
+					avatarNode.innerHTML = '';
+					avatarNode.hidden = true;
+				}
+			}
+
+			lockNotice.hidden = false;
+			disableCustomizerEditing();
+
+			if ( takeOverButton ) {
+				takeOverButton.disabled = false;
+			}
+
+			return;
+		}
+
+		lockNotice.hidden = true;
+		enableCustomizerEditing();
+	}
+
+	/**
+	 * Re-apply lock state to UI.
+	 *
+	 * @return {void}
+	 */
+	function refreshLockState() {
+		const data = new URLSearchParams();
+
+		if ( ! lockSettings?.nonce?.refreshLock ) {
+			return Promise.resolve();
+		}
+
+		data.append( 'action', 'customize_refresh_lock' );
+		data.append( 'nonce', lockSettings.nonce.refreshLock );
+		data.append( 'wp_customize', 'on' );
+
+		return fetch( ajaxurl, {
+			method: 'POST',
+			body: data,
+			credentials: 'same-origin'
+		} )
+		.then( function( response ) {
+			if ( response.ok ) {
+				return response.json(); // no errors
+			}
+			throw new Error( response.status );
+		} )
+		.then( function( result ) {
+			if ( result.success ) {
+				lockSettings.lock = lockSettings.lock || {};
+				lockSettings.lock.lockUser = result.data.lockUser || null;
+				applyLockState();
+			} else {
+				throw new Error( result.data || 'Customizer lock refresh failed.' );
+			}
+		} )
+		.catch( function( error ) {
+			console.error( 'Customizer lock refresh failed.', error );
+		} );
+	}
+
+	/**
+	 * Take over the current changeset lock.
+	 *
+	 * @return {void}
+	 */
+	function handleTakeOverLock() {
+		const data = new URLSearchParams(),
+			takeOverButton = lockNotice?.querySelector( '.button-primary' );
+
+		if ( ! lockSettings?.nonce?.takeOverLock ) {
+			return;
+		}
+
+		if ( takeOverButton ) {
+			takeOverButton.disabled = true;
+		}
+
+		data.append( 'action', 'customize_take_over_lock' );
+		data.append( 'nonce', lockSettings.nonce.takeOverLock );
+		data.append( 'wp_customize', 'on' );
+
+		fetch( ajaxurl, {
+			method: 'POST',
+			body: data,
+			credentials: 'same-origin'
+		} )
+		.then( function( response ) {
+			if ( response.ok ) {
+				return response.json(); // no errors
+			}
+			throw new Error( response.status );
+		} )
+		.then( function( result ) {
+			if ( result.success ) {
+				lockSettings.lock = lockSettings.lock || {};
+				lockSettings.lock.lockUser = null;
+				applyLockState();
+				return refreshLockState();
+			}
+			throw new Error( result.data || 'Lock takeover failed.' );
+		} )
+		.catch( function( error ) {
+			if ( takeOverButton ) {
+				takeOverButton.disabled = false;
+			}
+			console.error( 'Customizer lock takeover failed.', error );
+		} );
+	}
+
+	if ( lockNotice ) {
+		lockNotice.addEventListener( 'click', function( e ) {
+			if ( e.target.closest( '.button-primary' ) ) {
+				e.preventDefault();
+				handleTakeOverLock();
+			}
+		} );
+	}
+
+	refreshLockState().then( function() {
+		lockRefreshTimer = window.setInterval( refreshLockState, 5000 );
+	} );
 
 	// Limit motion where appropriate
 	reducedMotionMediaQuery.addEventListener( 'change', function handleReducedMotionChange( event ) {
@@ -243,6 +489,19 @@ document.addEventListener( 'DOMContentLoaded', function() {
 	}
 
 	function backgroundCheckboxChanged( input, settingId ) {
+		if ( settingId === 'header_textcolor' ) {
+			/*
+			 * The Display Site Title and Tagline control is not a Boolean
+			 * setting. It uses header_textcolor:
+			 *
+			 * checked   = the selected/default colour, for example "000"
+			 * unchecked = "blank"
+			 */
+			_updatedControlsWatcher[ settingId ] = input.checked ? input.value : 'blank';
+			activatePublishButton();
+			return;
+		}
+
 		if ( settingId === 'background_repeat' ) {
 			_updatedControlsWatcher.background_repeat = input.checked ? 'repeat' : 'no-repeat';
 		} else if ( settingId === 'background_attachment' ) {
@@ -304,13 +563,17 @@ document.addEventListener( 'DOMContentLoaded', function() {
 		}
 
 		input.addEventListener( 'input', function() {
-			if ( input.name === 'background-position' || input.type === 'checkbox' ) {
+			if ( input.name === 'background-position' || input.type === 'checkbox' || input.classList.contains( 'create-item-input' ) ) {
 				return;
 			}
 			inputChanged( input, settingId );
 		} );
 
 		input.addEventListener( 'change', function() {
+			if ( input.classList.contains( 'create-item-input' ) ) {
+				return;
+			}
+
 			if ( input.name === 'background-position' ) {
 				backgroundPositionChanged( input );
 				return;
@@ -593,11 +856,11 @@ document.addEventListener( 'DOMContentLoaded', function() {
 		} )
 		.then( function( result ) {
 			if ( i === 1 ) {
-				themesGrid.innerHTML = ''; // clear the current grid
+				themesGrid.replaceChildren(); // clear the current grid
 			}
 
 			// Populate grid with new items
-			themesGrid.insertAdjacentHTML( 'beforeend', convertThemeLinksToButtons( result.data.html ) );
+			themesGrid.append( convertThemeLinksToButtons( result.data.html ) );
 			orgThemes = document.querySelectorAll( '.wp-org .themes li' );
 			orgThemes.forEach( function( theme ) {
 				theme.style.marginRight = '2%';
@@ -619,9 +882,12 @@ document.addEventListener( 'DOMContentLoaded', function() {
 
 	function convertThemeLinksToButtons( html ) {
 		const template = document.createElement( 'template' );
-		template.innerHTML = html;
 
-		template.content.querySelectorAll( '.theme-install' ).forEach( function( link ) {
+		template.setHTML( html, {
+			sanitizer: {}
+		} );
+
+		template.content.querySelectorAll( 'a.theme-install' ).forEach( function( link ) {
 			const button = document.createElement( 'button' );
 
 			// Copy all attributes except href.
@@ -635,13 +901,15 @@ document.addEventListener( 'DOMContentLoaded', function() {
 			button.type = 'button';
 
 			// Preserve contents.
-			button.innerHTML = link.innerHTML;
+			for ( const child of link.childNodes ) {
+				button.append( child.cloneNode( true ) );
+			}
 
 			// Replace <a> with <button>.
 			link.replaceWith( button );
 		} );
 
-		return template.innerHTML;
+		return template.content.cloneNode( true );
 	}
 
 	/**
@@ -678,14 +946,14 @@ document.addEventListener( 'DOMContentLoaded', function() {
 			// Keep installation within Customizer
 			const customizeUrl = result.data?.customizeUrl || themeUrl;
 			if ( customizeUrl ) {
-				window.location = customizeUrl;
+				window.location = encodeURI( customizeUrl );
 				return;
 			}
 
 			// Fallback to installing within regular themes page in admin
 			const activateUrl = result.data?.activateUrl;
 			if ( activateUrl ) {
-				window.location = activateUrl;
+				window.location = encodeURI( activateUrl );
 				return;
 			}
 		} )
@@ -908,6 +1176,99 @@ document.addEventListener( 'DOMContentLoaded', function() {
 			// Handle success audible feedback.
 			wp.a11y.speak( wp.i18n.__( 'The preview URL has been copied to your clipboard' ) );
 		}
+	}
+
+	/**
+	 * Add a page from with the Homepage Settings panel
+	 *
+	 * @abstract
+	 * @return {void}
+	 */
+	function createPage( button ) {
+		var frontSelect, postsSelect,
+			data = new URLSearchParams(),
+			input = button.previousElementSibling,
+			settingId = button.closest( 'li' ).dataset.settingId,
+			errorItem = button.parentElement.nextElementSibling;
+
+		if ( ! input.value.trim() ) {
+			errorItem.style.display = '';
+			input.focus();
+			return;
+		}
+
+		errorItem.style.display = 'none';
+		button.disabled = true;
+		button.textContent = button.dataset.saving;
+
+		data.append( 'action', 'customize-nav-menus-insert-auto-draft' );
+		data.append( 'wp_customize', 'on' );
+		data.append( 'customize-menus-nonce', _wpCustomizeControlsL10n.menusNonce );
+		data.append( 'params[post_type]', 'page' );
+		data.append( 'params[post_title]', button.previousElementSibling.value.trim() );
+
+		fetch( ajaxurl, {
+			method: 'POST',
+			credentials: 'same-origin',
+			body: data
+		} )
+		.then( function( response ) {
+			if ( response.ok ) {
+				return response.json(); // no errors
+			}
+			throw new Error( response.status );
+		} )
+		.then( function( response ) {
+			if ( response.success ) {
+				input.value = '';
+				_updatedControlsWatcher.show_on_front = 'page';
+
+				if ( settingId === 'page_on_front' ) {
+					frontSelect = document.querySelector( 'select[data-customize-setting-link="page_on_front"]' );
+					addPageAsOption( frontSelect, response.data.post_id, response.data.title );
+					newFrontPageIds.push( { id: response.data.post_id, title: response.data.title } );
+					_updatedControlsWatcher.page_on_front = response.data.post_id;
+				} else if ( settingId === 'page_for_posts' ) {
+					postsSelect = document.querySelector( 'select[data-customize-setting-link="page_for_posts"]' );
+					addPageAsOption( postsSelect, response.data.post_id, response.data.title );
+					newPostsPageIds.push( { id: response.data.post_id, title: response.data.title } );
+					_updatedControlsWatcher.page_for_posts = response.data.post_id;
+				}
+
+				activatePublishButton();
+			} else {
+				errorItem.textContent = response.data && response.data.message ? response.data.message : _wpCustomizeControlsL10n.pageCreationFailure;
+				errorItem.style.display = '';
+			}
+		} )
+		.catch( function() {
+			errorItem.textContent = _wpCustomizeControlsL10n.pageCreationFailure;
+			errorItem.style.display = '';
+		} )
+		.finally( function() {
+			button.disabled = false;
+			button.textContent = button.dataset.add;
+		} );
+	}
+
+	/**
+	 * Add the new page as an option to the select dropdown in the Homepage Settings panel
+	 *
+	 * @abstract
+	 * @return {void}
+	 */
+	function addPageAsOption( select, value, title ) {
+		let existing = select.querySelector( 'option[value="' + value + '"]' ),
+			option = document.createElement( 'option' );
+
+		if ( existing ) {
+			return;
+		}
+
+		option.value = value;
+		option.textContent = title;
+		select.prepend( option );
+		select.value = value;
 	}
 
 	/**
@@ -1286,7 +1647,7 @@ document.addEventListener( 'DOMContentLoaded', function() {
 
 				// Show relevant button and clear grid
 				addButton = dialog.querySelector( '#media-button-insert' );
-				dialog.querySelector( '.widget-modal-grid' ).innerHTML = '';
+				dialog.querySelector( '.widget-modal-grid' ).replaceChildren();
 
 				if ( result.data.length === 0 ) {
 
@@ -1436,8 +1797,7 @@ document.addEventListener( 'DOMContentLoaded', function() {
 		// Update header image
 		if ( settingId === 'header_image_data' ) {
 			if ( selectedItem.className === 'choice' ) {
-				li.querySelector( '.container' ).innerHTML = '';
-				li.querySelector( '.container' ).append( imageElement.cloneNode() );
+				li.querySelector( '.container' ).replaceChildren( imageElement.cloneNode() );
 
 				// Find the matching entry from the localized data
 				headerData = Object.values( _wpCustomizeHeader.uploads || {} ).find(
@@ -1466,8 +1826,7 @@ document.addEventListener( 'DOMContentLoaded', function() {
 				forcePreviewRefresh( 'header_image', headerData.url );
 				document.getElementById( 'sub-accordion-section-header_image' ).querySelector( 'a' ).focus();
 			} else {
-				parent.previousElementSibling.querySelector( '.container' ).innerHTML = '';
-				parent.previousElementSibling.querySelector( '.container' ).append( imageElement );
+				parent.previousElementSibling.querySelector( '.container' ).replaceChildren( imageElement );
 				customizeButton.previousElementSibling.style.display = '';
 				customizeButton.classList.remove( 'upload-button' );
 				parent.previousElementSibling.querySelector( 'input' ).value = attachmentId;
@@ -1594,8 +1953,7 @@ document.addEventListener( 'DOMContentLoaded', function() {
 				grandparent.querySelector( 'video' )?.remove();
 				grandparent.querySelector( 'input' ).value = '';
 			}
-			parent.innerHTML = '';
-			parent.append( button );
+			parent.replaceChildren( button );
 			setTimeout( function() {
 				button.focus();
 			} );
@@ -1697,6 +2055,7 @@ document.addEventListener( 'DOMContentLoaded', function() {
 			navMenuNegatives = [], // an array because we need it to be iterable
 			navMenuLocations = [],
 			navMenuItems = [],
+			postsToPublish = [],
 			formData = new FormData(),
 			updateData = new FormData(),
 			previewLink = document.getElementById( 'preview-link' ),
@@ -1727,7 +2086,7 @@ document.addEventListener( 'DOMContentLoaded', function() {
 
 		// Clear stale notifications
 		document.querySelectorAll( '.customize-control-notifications-container' ).forEach( function( container ) {
-			container.innerHTML = '';
+			container.replaceChildren();
 		} );
 
 		// Populate arrays if a new menu is being added
@@ -1877,13 +2236,25 @@ document.addEventListener( 'DOMContentLoaded', function() {
 					value: item || ''
 				};
 			}
-
-			if ( newMenuItemIDs.length > 0 ) {
-				submittedChanges.nav_menus_created_posts = {
-					value: newMenuItemIDs
-				};
-			}
 		} );
+
+		if ( newMenuItemIDs.length > 0 ) {
+			postsToPublish = postsToPublish.concat( newMenuItemIDs );
+		}
+
+		newFrontPageIds.forEach( function( item ) {
+			postsToPublish.push( item.id );
+		} );
+
+		newPostsPageIds.forEach( function( item ) {
+			postsToPublish.push( item.id );
+		} );
+
+		if ( postsToPublish.length > 0 ) {
+			submittedChanges.nav_menus_created_posts = {
+				value: postsToPublish
+			};
+		}
 
 		// Add advanced menu-item changes directly to the outgoing
 		// publish payload without touching updatedControls.
@@ -2012,7 +2383,8 @@ document.addEventListener( 'DOMContentLoaded', function() {
 	function buildNotification( data ) {
 		var btn = document.createElement( 'button' ),
 			msg = document.createElement( 'div' ),
-			li = document.createElement( 'li' );
+			li = document.createElement( 'li' ),
+			span = document.createElement( 'span' );
 
 		li.className = [
 			'notice',
@@ -2026,16 +2398,18 @@ document.addEventListener( 'DOMContentLoaded', function() {
 
 		msg.className = 'notification-message';
 		msg.innerHTML = data.message || data.code || '';
-		li.appendChild( msg );
+		li.append( msg );
 
 		if ( data.dismissible ) {
+			span.className = 'screen-reader-text';
+			span.textContent = _wpCustomizeControlsL10n.dismiss;
 			btn.type = 'button';
 			btn.className = 'notice-dismiss';
-			btn.innerHTML = '<span class="screen-reader-text">' + _wpCustomizeControlsL10n.dismiss + '</span>';
+			btn.append( span );
 			btn.addEventListener( 'click', function() {
 				li.remove();
 			} );
-			li.appendChild( btn );
+			li.append( btn );
 		}
 
 		return li;
@@ -2343,6 +2717,10 @@ document.addEventListener( 'DOMContentLoaded', function() {
 		} else if ( e.target.classList?.contains( 'customize-copy-preview-link' ) ) {
 			copyToClipboard( 'preview', e.target );
 
+		// Add a page from within the Homepage settings panel
+		} else if ( e.target.classList?.contains( 'add-content' ) ) {
+			createPage( e.target );
+
 		// Add a widget
 		} else if ( e.target.classList?.contains( 'add-new-widget' ) ) {
 			document.body.classList.toggle( 'adding-widget' );
@@ -2437,7 +2815,7 @@ document.addEventListener( 'DOMContentLoaded', function() {
 			if ( e.target.className === 'preview' ) {
 				e.target.style.display = 'none';
 				e.target.previousElementSibling.style.display = 'block';
-				if ( window.location.hash === '#sub-accordion-section-themes' ) {
+				if ( hash === 'sub-accordion-section-themes' ) {
 					document.querySelector( '.customize-themes-full-container' ).style.display = 'block';
 				} else {
 					previewFrame.style.zIndex = '10';
@@ -2453,21 +2831,22 @@ document.addEventListener( 'DOMContentLoaded', function() {
 		} else if ( e.target.classList && e.target.classList.contains( 'themes-section-installed_themes' ) ) {
 			form.querySelector( '.themes-section-wporg_themes' ).classList.remove( 'selected' );
 			e.target.classList.add( 'selected' );
+			document.querySelector( '.theme-browser' ).classList.add( 'local' );
+			document.querySelector( '.themes-section-installed_themes' ).setAttribute( 'aria-expanded', 'true' );
+			if ( window.innerWidth <= 640 ) {
+				document.querySelector( '#customize-header-actions .preview' ).style.display = 'none';
+				document.querySelector( '#customize-header-actions .controls' ).style.display = 'block';
+				document.querySelector( '.customize-themes-full-container' ).style.display = 'block';
+			}
+
 			if ( document.querySelector( '.wp-org' ) ) {
 				document.querySelector( '.themes').innerHTML = installedThemesHTML;
 				document.querySelector( '.theme-browser' ).classList.remove( 'wp-org' );
-				document.querySelector( '.theme-browser' ).classList.add( 'local' );
-				document.querySelector( '.themes-section-installed_themes' ).setAttribute( 'aria-expanded', 'true' );
 				document.querySelector( '.themes-section-wporg_themes' ).setAttribute( 'aria-expanded', 'false' );
 				document.querySelector( '.feature-filter-toggle' ).style.display = 'none';
 				document.querySelector( '.feature-filter-toggle' ).setAttribute( 'aria-expanded', 'false' );
 				document.querySelector( '.filter-drawer' ).style.display = 'none';
 				document.querySelector( '.filter-themes-count .theme-count' ).textContent = document.querySelectorAll( '.local .themes li' ).length;
-				if ( window.innerWidth <= 640 ) {
-					document.querySelector( '#customize-header-actions .preview' ).style.display = 'none';
-					document.querySelector( '#customize-header-actions .controls' ).style.display = 'block';
-					document.querySelector( '.customize-themes-full-container' ).style.display = 'block';
-				}
 			}
 			if ( orgThemes ) {
 				intersectionObserver.unobserve( orgThemes[orgThemes.length - 1] ); // deactivate Intersection Observer
@@ -2786,11 +3165,15 @@ document.addEventListener( 'DOMContentLoaded', function() {
 			labelTapToUndo: IMAGE_WIDGET.tap_close,
 			fileRenameFunction: ( file ) =>
 				new Promise( function( resolve ) {
-					const newName = window.prompt(
-						_wpCustomizeControlsL10n.new_filename,
-						file.name
-					);
-					resolve( newName === null ? file.name : newName );
+					if ( parseInt( _cpFilepondLabels.renameFiles ) === 1 ) {
+						const newName = window.prompt(
+							_wpCustomizeControlsL10n.new_filename,
+							file.name
+						);
+						resolve( newName === null ? file.name : newName );
+					} else {
+						resolve( file.name );
+					}
 				}
 			),
 			acceptedFileTypes: document.querySelector( '.uploader-inline' ).dataset.allowedMimes.split( ',' ),
