@@ -105,7 +105,7 @@ unset( $help );
 
 $screen->set_help_sidebar(
 	'<p><strong>' . __( 'For more information:' ) . '</strong></p>' .
-	'<p>' . __( '<a href=" https://docs.classicpress.net/user-guides/using-classicpress/dashboard-screen/">Documentation on Dashboard</a>' ) . '</p>' .
+	'<p>' . __( '<a href="https://wordpress.org/support/article/dashboard-screen/">Documentation on Dashboard</a>' ) . '</p>' .
 	'<p>' . __( '<a href="https://wordpress.org/support/forums/">Support forums</a>' ) . '</p>'
 );
 
