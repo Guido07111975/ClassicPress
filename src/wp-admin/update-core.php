@@ -515,7 +515,7 @@ function list_theme_updates() {
 	printf(
 		/* translators: %s: Link to documentation on child themes. */
 		__( '<strong>Please Note:</strong> Any customizations you have made to theme files will be lost. Please consider using <a href="%s">child themes</a> for modifications.' ),
-		__( 'https://developer.wordpress.org/themes/advanced-topics/child-themes/' )
+		__( 'https://docs.classicpress.net/user-guides/using-classicpress/creating-a-child-theme/' )
 	);
 	?>
 </p>
@@ -884,7 +884,7 @@ get_current_screen()->add_help_tab(
 
 get_current_screen()->set_help_sidebar(
 	'<p><strong>' . __( 'For more information:' ) . '</strong></p>' .
-	'<p>' . __( '<a href="https://wordpress.org/documentation/article/dashboard-updates-screen/">Documentation on Updating ClassicPress</a>' ) . '</p>' .
+	'<p>' . __( '<a href="https://docs.classicpress.net/user-guides/updating-classicpress/">Documentation on Updating ClassicPress</a>' ) . '</p>' .
 	'<p>' . __( '<a href="https://forums.classicpress.net/c/support">Support forums</a>' ) . '</p>'
 );
 
