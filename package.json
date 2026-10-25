@@ -1,6 +1,6 @@
 {
   "name": "ClassicPress",
-  "version": "2.7.3+dev",
+  "version": "2.7.4+dev",
   "description": "ClassicPress is web software you can use to create a beautiful website or blog.",
   "repository": {
     "type": "git",
@@ -33,14 +33,14 @@
     "install-changed": "^1.1.0",
     "postcss": "8.5.31",
     "qunit": "^3.0.0",
-    "rollup": "4.64.9",
-    "sass": "1.105.2",
+    "rollup": "4.65.0",
+    "sass": "1.106.1",
     "sinon": "^22.0.0",
     "sinon-test": "^3.1.5",
     "source-map-loader": "^5.0.0",
     "terser": "5.51.2",
     "terser-webpack-plugin": "^5.3.7",
-    "webpack": "5.112.0"
+    "webpack": "5.112.2"
   },
   "dependencies": {
     "@melloware/coloris": "0.25.0",
