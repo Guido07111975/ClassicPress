@@ -437,7 +437,7 @@
 		},
 		background: function() {
 			var css = '',
-				props = [ 'color', 'image', 'preset', 'position_x', 'position_y', 'size', 'repeat', 'attachment' ],
+				props = [ 'color', 'image', 'position_x', 'position_y', 'size', 'repeat', 'attachment' ],
 				settings = {},
 				bgCss,
 				validPositionX = [ 'left', 'center', 'right' ],
@@ -809,7 +809,7 @@
 		} );
 
 		// Background settings
-		[ 'color', 'image', 'preset', 'position_x', 'position_y', 'size', 'repeat', 'attachment' ].forEach( function( prop ) {
+		[ 'color', 'image', 'position_x', 'position_y', 'size', 'repeat', 'attachment' ].forEach( function( prop ) {
 			var setting = api._settings[ 'background_' + prop ];
 			if ( setting ) {
 				setting.bind( api.settingPreviewHandlers.background );
